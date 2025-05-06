@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.http import JsonResponse
-from core.models import Course, CourseContent
+from core.models import Course, CourseContent, CourseMember
 from django.core import serializers
 from django.db.models import Max, Min, Avg, Count
 
@@ -93,3 +93,38 @@ def courseDetail(request, course_id):
              }
 
    return JsonResponse(result)
+
+def userWhoCreateCourse(request):
+    count = User.objects.filter(course__isnull=False).distinct().count()
+    return JsonResponse({'user_membuat_course': count})
+
+def userWhoDontCreateCourse(request):
+    count = User.objects.filter(course__isnull=True).distinct().count()
+    return JsonResponse({'user_tidak_membuat_course': count})
+
+def averageCoursePerUser(request):
+    average = CourseMember.objects.values('user_id').annotate(
+        course_count=Count('course_id')
+    ).aggregate(avg=Avg('course_count'))['avg'] or 0
+    return JsonResponse({'rata_rata_course_diikuti_user': round(average, 2)})
+
+def userWithMostCourses(request):
+    top_member = CourseMember.objects.values('user_id').annotate(
+        course_count=Count('course_id')
+    ).order_by('-course_count').first()
+    if top_member:
+        user = User.objects.get(pk=top_member['user_id'])
+        return JsonResponse({
+            'user_terbanyak_course': {
+                'id': user.id,
+                'username': user.username,
+                'jumlah_course_diikuti': top_member['course_count']
+            }
+        })
+    else:
+        return JsonResponse({'user_terbanyak_course': None})
+    
+def usersWithoutCourses(request):
+    users = User.objects.exclude(id__in=CourseMember.objects.values('user_id'))
+    data = list(users.values('id', 'username'))
+    return JsonResponse({'user_tidak_mengikuti_course': data})

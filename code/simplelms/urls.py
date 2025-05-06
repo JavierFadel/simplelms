@@ -19,5 +19,11 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('silk/', include('silk.urls', namespace='silk'))
+    path('silk/', include('silk.urls', namespace='silk')),
+
+    # path('course/stat/created/', userWhoCreateCourse),
+    # path('course/stat/not-created/', users_who_dont_create_course),
+    # path('course/stat/average-joined/', average_course_per_user),
+    # path('course/stat/most-joined/', user_with_most_courses),
+    # path('course/stat/never-joined/', users_who_join_no_course),
 ]
